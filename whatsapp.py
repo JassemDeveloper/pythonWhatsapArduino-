@@ -35,10 +35,17 @@ auth_token = 'c43b9d3a8b61086a1xxxxx1dcb755455'
 sender = 'whatsapp:+14153522386'
 client = Client(account_sid, auth_token)
 
-
-
-
-
+ports = list(serial.tools.list_ports.comports())
+ArduinoisConnected = False
+if len(ports) > 0:
+    port = str(ports[0]).split(' ')[0]
+    board = Arduino(port)
+    if board:
+        ArduinoisConnected=True
+    else:
+         ArduinoisConnected=False
+else:
+    ArduinoisConnected = False
 
 # return instructions when user enters wrong keywords
 def help():
@@ -65,6 +72,7 @@ def read_messages():
         )
         for record in messages:
             if record.direction == "inbound":
+                print(record.body)
                 switcher(record.body, record.from_)
     except:
        print("something went wrong")
@@ -81,32 +89,21 @@ def create_message(msg,to):
     except:
         print("something  went wrong")
 
-
-
 #switch LED on and off on arduino board pin 13
 def switch_on_off(msg):
-    ports = list(serial.tools.list_ports.comports())
-    port = ['COM3', 'COM4']
-    if port in ports:
-        board = Arduino(port)
+    if(ArduinoisConnected):
         if len(msg) > 0:
             if msg == "on":
-                if board:
-                    board.digital[13].write(1)
-                    return "LED Light is on"
-                return "board is not connected"
+                board.digital[13].write(1)
+                return "LED Light is on"
             elif msg == "off":
-                if board:
-                    board.digital[13].write(0)
-                    return "LED Light is off"
-                return "board is not connected"
+                board.digital[13].write(0)
+                return "LED Light is off"
             else:
                 return help()
         else:
             return help()
-    else:
-        return "Arduino board is not connected"
-
+    return "Arduino is not connected"
 
 #test sites using ping command
 def ping_function(msg):
@@ -130,12 +127,12 @@ def switcher(msg,to):
     else:
         cmd = msg
         cmd_request = ''
-
     switch = {
         "ping": partial(ping_function,cmd_request),
         "switch": partial(switch_on_off,cmd_request),
         "help": help
     }
+
     func = switch.get(cmd, help)
     create_message(func(),to)
 
