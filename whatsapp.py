@@ -5,7 +5,7 @@ I will show how to use twilio whatsapp API  in order to execute commands on your
 
 you will need to do the following in order the code below to work:
 
-1-create an account in https://www.twilio.com
+1-create an account in www.twilio.com/referral/Xy9NoB
 2-after creating the account , set theses variables based on the information provided in your dashboard.
 account_sid = 'Your Account SID'
 auth_token = 'Your Token'
