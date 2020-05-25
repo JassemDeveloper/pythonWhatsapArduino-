@@ -1,6 +1,9 @@
 '''
 
-you will need to do the following for the below code to work:
+
+I will show how to use twilio whatsapp API  in order to execute commands on your machine or your Arduino board
+
+you will need to do the following in order the code below to work:
 
 1-create an account in https://www.twilio.com
 2-after creating the account , set theses variables based on the information provided in your dashboard.
@@ -18,20 +21,24 @@ Now you are ready to test the code
 
 '''
 
-
-
+from functools import partial
 from twilio.rest import Client
 import datetime,time
 import os
 import re
-from pyfirmata import Arduino
+from pyfirmata import Arduino,util
+import serial.tools.list_ports
 
 #Twilio API Config
-account_sid = 'XXX'
-auth_token = 'XXX'
-sender = 'XXXX'
-
+account_sid = 'AC206d1e54cxxxxxd532a8125595101'
+auth_token = 'c43b9d3a8b61086a1xxxxx1dcb755455'
+sender = 'whatsapp:+14153522386'
 client = Client(account_sid, auth_token)
+
+
+
+
+
 
 # return instructions when user enters wrong keywords
 def help():
@@ -54,8 +61,6 @@ def read_messages():
         minutes = d.minute
         seconds = d.second
         messages = client.messages.list(
-           # date_sent_after=datetime(year,month,day,hours,minutes,seconds),
-           # date_sent_before=datetime(year,month,day,hours,minutes-1,seconds),
             limit=1
         )
         for record in messages:
@@ -76,19 +81,32 @@ def create_message(msg,to):
     except:
         print("something  went wrong")
 
+
+
 #switch LED on and off on arduino board pin 13
 def switch_on_off(msg):
-    port = 'COM3'
-    board = Arduino(port)
-    if len(msg) > 0:
-        if msg == "on":
-            board.digital[13].write(1)
-            return "LED Light is on"
-        elif msg == "off":
-            board.digital[13].write(0)
-            return "LED Light is off"
+    ports = list(serial.tools.list_ports.comports())
+    port = ['COM3', 'COM4']
+    if port in ports:
+        board = Arduino(port)
+        if len(msg) > 0:
+            if msg == "on":
+                if board:
+                    board.digital[13].write(1)
+                    return "LED Light is on"
+                return "board is not connected"
+            elif msg == "off":
+                if board:
+                    board.digital[13].write(0)
+                    return "LED Light is off"
+                return "board is not connected"
+            else:
+                return help()
         else:
             return help()
+    else:
+        return "Arduino board is not connected"
+
 
 #test sites using ping command
 def ping_function(msg):
@@ -98,27 +116,28 @@ def ping_function(msg):
             os.system('ping ' + msg + ' > result.txt')
             result = open("result.txt", "r")
             return result.read()
-
+        else:
+            return help()
+    else:
+        return help()
 
 
 #specific function will be executed if the keyword is matched otherwise help menu will be shown
 def switcher(msg,to):
-
     if len(msg.split(' ')) > 1:
-        cmd=msg.split(' ')[0]
-        cmd_request= msg.split(' ')[1]
+        cmd = msg.split(' ')[0]
+        cmd_request = msg.split(' ')[1]
     else:
         cmd = msg
         cmd_request = ''
 
-    switch={
-        "ping": ping_function(cmd_request),
-        "switch": switch_on_off(cmd_request),
-        "help": help()
-
+    switch = {
+        "ping": partial(ping_function,cmd_request),
+        "switch": partial(switch_on_off,cmd_request),
+        "help": help
     }
-    create_message(switch.get(cmd, help()),to)
-
+    func = switch.get(cmd, help)
+    create_message(func(),to)
 
 
 #read message every 5 seconds
