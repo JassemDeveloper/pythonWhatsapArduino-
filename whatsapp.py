@@ -12,8 +12,8 @@ auth_token = 'Your Token'
 sender = 'whatsapp:Provided Number'
 3-install twilio api  and for more info go to this link https://www.twilio.com/docs/libraries/python
 pip install twilio
-4-install pyfirmata in your python project
-pip install pyfirmata
+4-install pyfirmata2 in your python project
+pip install pyfirmata2
 5- install arduino  IDE on your machine from this link https://www.arduino.cc/en/Main/Software
 6- upload firmata standard on your arduino board.
 
@@ -26,26 +26,35 @@ from twilio.rest import Client
 import datetime,time
 import os
 import re
-from pyfirmata import Arduino,util
-import serial.tools.list_ports
+from pyfirmata2 import Arduino
+import serial, serial.tools.list_ports
 
-#Twilio API Config
-account_sid = 'AC206d1e54cxxxxxd532a8125595101'
-auth_token = 'c43b9d3a8b61086a1xxxxx1dcb755455'
-sender = 'whatsapp:+14153522386'
+#Twilio API Config\
+
+account_sid = 'AXXd1e54cXXXXXX7d532a8125595101'
+auth_token = '846XX05XXcc0a29c7X8b771e'
+sender = 'whatsapp:+14132338446'
 client = Client(account_sid, auth_token)
 
-ports = list(serial.tools.list_ports.comports())
-ArduinoisConnected = False
-if len(ports) > 0:
-    port = str(ports[0]).split(' ')[0]
-    board = Arduino(port)
-    if board:
-        ArduinoisConnected=True
+
+
+def checkArduinoIsConnected():
+    ports = list(serial.tools.list_ports.comports())
+    if len(ports) > 0:
+        port = str(ports[0]).split(' ')[0]
+        arduino = serial.Serial(port)
+        board = Arduino(port)
+        if board:
+            status = True
+        else:
+            status = False
     else:
-         ArduinoisConnected=False
-else:
-    ArduinoisConnected = False
+        status = False
+
+    return {
+        "status": status,
+        "board": board
+    }
 
 # return instructions when user enters wrong keywords
 def help():
@@ -89,21 +98,36 @@ def create_message(msg,to):
     except:
         print("something  went wrong")
 
+def find_port():
+    ports = list(serial.tools.list_ports.comports())
+    if len(ports) > 0:
+        selected_port = str(ports[0]).split(' ')[0]
+        arduino = serial.Serial(selected_port, 115200)
+        if arduino.isOpen():
+           return arduino.portstr
+        else:
+            return False
+
 #switch LED on and off on arduino board pin 13
 def switch_on_off(msg):
-    if(ArduinoisConnected):
+    port = find_port()
+    if port != None:
         if len(msg) > 0:
+            board = Arduino(port)  # Arduino.AUTODETECT
             if msg == "on":
                 board.digital[13].write(1)
+                board.exit()
                 return "LED Light is on"
             elif msg == "off":
                 board.digital[13].write(0)
+                board.exit()
                 return "LED Light is off"
             else:
+                board.exit()
                 return help()
-        else:
-            return help()
-    return "Arduino is not connected"
+        return help()
+    else:
+        return "Arduino is not connected"
 
 #test sites using ping command
 def ping_function(msg):
@@ -137,7 +161,11 @@ def switcher(msg,to):
     create_message(func(),to)
 
 
-#read message every 5 seconds
-while True:
-    read_messages()
-    time.sleep(5)
+
+if __name__ == "__main__":
+    # read message every 5 seconds
+    while True:
+        read_messages()
+        time.sleep(5)
+
+
