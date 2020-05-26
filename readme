@@ -1,15 +1,22 @@
-You will need to do the following for the below code to work:
+'''
 
-1-create an account in https://www.twilio.com
+
+I will show how to use twilio whatsapp API  in order to execute commands on your machine or your Arduino board
+
+you will need to do the following in order the code below to work:
+
+1-create an account in www.twilio.com/referral/Xy9NoB
 2-after creating the account , set theses variables based on the information provided in your dashboard.
 account_sid = 'Your Account SID'
 auth_token = 'Your Token'
 sender = 'whatsapp:Provided Number'
 3-install twilio api  and for more info go to this link https://www.twilio.com/docs/libraries/python
 pip install twilio
-4-install pyfirmata in your python project
-pip install pyfirmata
+4-install pyfirmata2 in your python project
+pip install pyfirmata2
 5- install arduino  IDE on your machine from this link https://www.arduino.cc/en/Main/Software
 6- upload firmata standard on your arduino board.
 
 Now you are ready to test the code
+
+'''
